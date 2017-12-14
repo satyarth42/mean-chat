@@ -1,0 +1,26 @@
+<html>
+<head>
+    <title>Mean Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/stylesheets/bootstrap.min.css">
+    <script type="text/javascript" src="/javascripts/jquery-3.1.1.min.js"></script>
+    <script type="text/javascript" src="/javascripts/custom.js"></script>
+    <script type="text/javascript" src="/javascripts/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/javascripts/socket.io.js"></script>
+    <script type="text/javascript">
+        var socket = io();
+        $(window).on("load",function(){
+            socket.emit('new_user',{_id:'<%=session.passport.user._id%>'});
+        });
+    </script>
+</head>
+<body>
+<% include templates/header_auth.ejs %>
+<div class="container-fluid container">
+    <%if(msg.length>0){%>
+        <div class="alert alert-success"><%=msg%></div>
+    <%}%>
+
+</div>
+</body>
+</html>
