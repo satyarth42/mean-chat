@@ -110,4 +110,13 @@ router.get('/logout',function(req,res,next){
     req.flash('success_msg','You have successfully logged out');
     res.redirect('/');
 });
+
+router.post('/search',function(req,res,next){
+    var str = req.body.search_friends;
+    str=str+'.*';
+    use.find({$or:[{username:{$regex:str,$options:'i'}},{fname:{$regex:str,$options:'i'}},{lname:{$regex:str,$options:'i'}}]},function(err,docs){
+    //use.find({username:{$regex:str,$options:'i'}},function(err,docs){
+        res.render('search',{session:req.session,docs:docs});
+    }).select('-password');
+});
 module.exports = router;

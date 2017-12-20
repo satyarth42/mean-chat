@@ -17,15 +17,22 @@
 <body>
 <% include templates/header_auth.ejs %>
 <div class="container-fluid container">
-    <%if(msg.length>0){%>
-        <div class="alert alert-success"><%=msg%></div>
-    <%}%>
     <div id="search_box" align="center">
         <form method="post" action="/search" class="form-group">
             <input type="text" name="search_friends" required placeholder="Search friends" style="width: 60%; border-color: #00B7FF; border-width: 4; border-style: solid">
             <input type="submit" class="btn-primary" value="Search" >
         </form>
     </div>
+    <%if(docs.length==0){%>
+        <div class="alert alert-info">No users found</div>
+    <%}else{%>
+    <table CLASS="table table-responsive">
+        <tr><th>Username</th><th>First Name</th><th>Last Name</th></tr>
+    <%docs.forEach(function(item,index){%>
+        <tr><td><%=item.username%></td><td><%=item.fname%></td><td><%=item.lname%></td></tr>
+    <%})%>
+    </table>
+    <%}%>
 </div>
 </body>
 </html>
