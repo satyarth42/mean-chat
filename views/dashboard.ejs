@@ -3,14 +3,100 @@
     <title>Mean Chat</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/stylesheets/bootstrap.min.css">
+    <link rel="stylesheet" href="/stylesheets/style.css">
     <script type="text/javascript" src="/javascripts/jquery-3.1.1.min.js"></script>
     <script type="text/javascript" src="/javascripts/custom.js"></script>
     <script type="text/javascript" src="/javascripts/bootstrap.min.js"></script>
     <script type="text/javascript" src="/javascripts/socket.io.js"></script>
     <script type="text/javascript">
         var socket = io();
+        var active = "";
         $(window).on("load",function(){
-            socket.emit('new_user',{_id:'<%=session.passport.user._id%>'});
+            socket.emit('new_user',{_id:'<%=session.passport.user.username%>'});
+
+        });
+        function search()
+        {
+            var str=$('input[name=search_friends]').val();
+            if(str.length>0)
+                socket.emit('search',{name:str});
+        }
+        socket.on('user_list',function(data){
+            var list=data.docs;
+            $('#main').html('');
+            $('#main').append("<table id='srch' class='table table-responsive'><tr><th>Username</th><th>First Name</th><th>Last Name</th></tr></table>");
+            list.forEach(function (item,index) {
+                var row="<tr id="+item.username+"><td>"+item.username+"<td>"+item.fname+"<td>"+item.lname+"</tr>";
+                $('#srch').append(row);
+            });
+
+        });
+
+        function mouse_enter(id){
+            var elem = '#'+id
+            $(elem).css({'background-color':'#8c91ff'});
+        }
+        function mouse_out(id){
+            var elem = '#'+id
+            $(elem).css({'background-color':'white'});
+        }
+        function mouse_click(id){
+            var elem = '#'+id;
+            $(elem).remove();
+            var fun = "onmouseenter=mouse_enter('"+id+"') onmouseout=mouse_out('"+id+"') onclick=mouse_click('"+id+"')";
+            var str="<tr id="+id+" "+fun+"><td align=center id="+id+">"+id+"</tr>";
+            $('#list').prepend(str);
+            start_chat(id);
+
+        }
+        function start_chat(id)
+        {
+            $('#main').text('');
+            $('#main').append("<h3><b>"+id+"</b></h3><br>");
+            $('#main').append("<div id='msgs' class='col-md-12 col-sm-12 col-xs-12 col-lg-12 msg_box'></div>")
+            $('#main').append("<input type=text minlength='1' style='width: 60%;border-color: #00B7FF; border-width: 4; border-style: solid' name='message' id="+id+" placeholder='Write here...'><input type='button' value='Send' class='btn-primary' onclick='send_msg()' id="+id+">");
+            socket.emit('get_msgs',{user1:'<%=session.passport.user.username%>',user2:id});
+            $('')
+            active = id;
+        }
+        function send_msg() {
+            var str = $('#main input[type=button]').attr('id');
+            var str_box = "input[type=text][id=" + str + "]";
+            var msg = $(str_box).val();
+            if (msg.length > 0){
+                socket.emit('message', {msg: msg, sender: '<%= session.passport.user.username %>', receiver: str});
+                $(str_box).val('');
+                $('#msgs').append("<div class='row' ><div class=sent_msg>" +msg+ "</div></div>");
+                var elem = document.getElementById('msgs');
+                elem.scrollTop = elem.scrollHeight;
+            }
+        }
+
+        socket.on('receive_msg',function(data){
+            var message = data.data;
+            if(message.sender==active){
+                $('#msgs').append("<div class='row' ><div class=rec_msg>" +message.msg+ "</div></div>");
+                var elem = document.getElementById('msgs');
+                elem.scrollTop = elem.scrollHeight;
+            }
+            else{
+                var nact = 'tr[id='+message.sender+']';
+                $(nact).css({'border':'solid','border-color':'green'});
+            }
+        });
+
+        socket.on('messages',function(data){
+            var user = '<%= session.passport.user.username %>';
+            data.data.forEach(function(item,index){
+                if(item.sender==user){
+                    $('#msgs').append("<div class='row' ><div class=sent_msg>" +item.message+ "</div></div>");
+                }
+                else{
+                    $('#msgs').append("<div class='row' ><div class=rec_msg>" +item.message+ "</div></div>");
+                }
+            });
+            var elem = document.getElementById('msgs');
+            elem.scrollTop = elem.scrollHeight;
         });
     </script>
 </head>
@@ -21,10 +107,22 @@
         <div class="alert alert-success"><%=msg%></div>
     <%}%>
     <div id="search_box" align="center">
-        <form method="post" action="/search" class="form-group">
+        <form class="form-group">
             <input type="text" name="search_friends" required placeholder="Search friends" style="width: 60%; border-color: #00B7FF; border-width: 4; border-style: solid">
-            <input type="submit" class="btn-primary" value="Search" >
+            <input type="button" class="btn-primary" value="Search" onclick="search()">
         </form>
+    </div>
+    <div style="height: auto">
+        <div id="friends" class="col-xs-12 col-sm-2 col-md-3 col-lg-3" style=" max-height: 600px; min-height: 100px; height: auto">
+            <table class='table table-responsive table-bordered' id="list">
+            <%docs.forEach(function (item,index) { %>
+                <tr onmouseenter="mouse_enter('<%=item.username%>')" onmouseout="mouse_out('<%=item.username%>')" onclick="mouse_click('<%=item.username%>')" id=<%=item.username%>><td align="center" id="<%=item.username%>"><%=item.username%></td></tr>
+            <%})%>
+            </table>
+        </div>
+        <div id="main" class="col-xs-12 col-sm-10 col-md-9 col-lg-9" style=" max-height: 600px; min-height: 100px; height: auto">
+
+        </div>
     </div>
 </div>
 </body>

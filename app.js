@@ -56,13 +56,39 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
-
+var use = require('./models/users');
+var messages = require('./models/messages');
 var onlineUsers = {};
 io.on('connection',function(socket){
     socket.on('new_user',function(data){
         onlineUsers[data._id]=socket['id'];
     });
-    
+    socket.on('search',function(data){
+        var str=data['name']+".*";
+        use.find({$or:[{username:{$regex:str,$options:'i'}},{fname:{$regex:str,$options:'i'}},{lname:{$regex:str,$options:'i'}}]},function(err,docs){
+            socket.emit('user_list',{docs:docs});
+        }).select('-password');
+    });
+    socket.on('message',function(data){
+        var message = new messages({
+            "sender":data.sender,
+            "receiver":data.receiver,
+            "message":data.msg,
+        });
+        message.save(function(err,updated){
+            if(err) console.log(err);
+        });
+        if(data.receiver in onlineUsers){
+            socket.to(onlineUsers[data.receiver]).emit('receive_msg',{data:data});
+        }
+    });
+    socket.on('get_msgs',function(data){
+        var snd = data.user1;
+        var rcv = data.user2;
+        messages.find({$or:[{$and:[{"sender":snd},{"receiver":rcv}]},{$and:[{"sender":rcv},{"receiver":snd}]}]},function (err,data){
+            socket.emit('messages',{data:data});
+        });
+    });
 });
 
 module.exports = app;

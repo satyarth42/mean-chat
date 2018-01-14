@@ -8,7 +8,6 @@ var mongoose = require('mongoose');
 var use = require('../models/users');
 
 router.get('/', function(req, res, next) {
-    console.log(req.session);
     if(req.session.passport && req.session.passport.user)
         res.redirect('/dashboard');
     else
@@ -22,7 +21,10 @@ router.get('/register', function(req,res,next){
 });
 router.get('/dashboard',function(req,res,next){
     if(req.session.passport && req.session.passport.user){
-        res.render('dashboard',{msg:req.flash('success'),session:req.session});
+        var str=req.session.passport.user.username;
+        use.find({username:{$ne:str}},function(err,docs){
+            res.render('dashboard',{msg:req.flash('success'),session:req.session,docs:docs});
+        }).select('-password');
     }
     else
         res.redirect('/');
@@ -95,7 +97,7 @@ var isValidPassword = function(user,password){
 };
 
 passport.serializeUser(function(user, done) {
-    var sessionUser = {_id:user._id,email:user.email,fname:user.fname,lname:user.lname};
+    var sessionUser = {_id:user._id,username:user.username,fname:user.fname,lname:user.lname};
     done(null, sessionUser);
 });
 
@@ -111,12 +113,5 @@ router.get('/logout',function(req,res,next){
     res.redirect('/');
 });
 
-router.post('/search',function(req,res,next){
-    var str = req.body.search_friends;
-    str=str+'.*';
-    use.find({$or:[{username:{$regex:str,$options:'i'}},{fname:{$regex:str,$options:'i'}},{lname:{$regex:str,$options:'i'}}]},function(err,docs){
-    //use.find({username:{$regex:str,$options:'i'}},function(err,docs){
-        res.render('search',{session:req.session,docs:docs});
-    }).select('-password');
-});
+
 module.exports = router;

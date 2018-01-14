@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 var schema = mongoose.Schema;
-var mails = new schema({
+var messages = new schema({
     "sender":{
         type:String,
         required:true
@@ -9,15 +9,9 @@ var mails = new schema({
         type:String,
         required:true
     },
-    "subject":{
+    "message":{
         type:String
-    },
-    "content":{
-        type:String
-    },
-    "date":{
-        type:Date
     }
-},{collection:'emails'});
+},{collection:'messages'});
 
-module.exports = mongoose.model('emails',mails);
+module.exports = mongoose.model('messages',messages);

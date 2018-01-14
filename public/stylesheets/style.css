@@ -6,3 +6,35 @@ body {
 a {
   color: #00B7FF;
 }
+.msg_box{
+  height:300px;
+  border: double;
+  border-color: #1a6ecc;
+  overflow: scroll;
+}
+.sent_msg{
+  border: thick;
+  border-color: #3fb618;
+  background-color: #77ffff;
+  border-radius: 20px;
+  font-size: medium;
+  max-width: 300px;
+  text-align: center;
+  float: right;
+  position: relative;
+  right:20px;
+  margin-top: 20px;
+}
+.rec_msg{
+  border: thick;
+  border-color: #3fb618;
+  background-color: #ffae8a;
+  border-radius: 20px;
+  font-size: medium;
+  max-width: 300px;
+  text-align: center;
+  float: left;
+  position: relative;
+  left:20px;
+  margin-top: 20px;
+}
